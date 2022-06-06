@@ -1,23 +1,38 @@
 import logo from './logo.svg';
 import './App.css';
+import Dashboard from './components/Dashboard';
+import DataProvider from './providers/DataProvider'
+import Chart from './components/Chart1'
+import TestThis from './components/TestThis';
+import { Grid, Box, Divider, AppBar, Toolbar, IconButton, Typography } from '@mui/material';
+import { Profiler } from 'react';
+import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
+
+
+const theme = createTheme({
+  friendsListItem: {
+    "&:hover $actions": {
+      visibility: "hidden"
+    }
+  },
+  // status: {
+  //   danger: orange[500],
+  // },
+});
 function App() {
+  console.log('rendering app')
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <Profiler id="first" onRender={(input)=>{console.log(input)}}>
+      <DataProvider>
+        <ThemeProvider theme={theme}>
+          <Dashboard />
+          {/* <Chart /> */}
+        </ThemeProvider>
+
+      </DataProvider>
+      </Profiler>
     </div>
   );
 }
