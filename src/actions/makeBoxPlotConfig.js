@@ -27,13 +27,18 @@ const configInit = {
     title: {
       text: 'Forecast Month<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>',
       style: {
-          fontStyle: 'italic'
+          fontSize: 'italic'
       }
   },
 },
 
   xAxis: {
-
+    title: {
+      text: 'Water Year',
+      style: {
+        fontSize: '1.1em'
+      }
+  }
   },
 
   yAxis: {
@@ -206,7 +211,7 @@ const configInit = {
 
 function makeBoxplotData(data){
   const returnData = Object.create({})
-  // console.log('datahere', data)
+  // console.log('datahere %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%', data)
   for(const monthYear in data){
     returnData[monthYear]= Object.create({})
     const allStationData = data[monthYear]
@@ -225,12 +230,12 @@ function makeBoxplotData(data){
 
 }
 
-export function makeConfig(stationData, {propHeight, propWidth}, station, agnosticData, dataType){
+export function makeConfig({propHeight, propWidth}, station, agnosticData, dataType){
   // console.log('agnostic data', agnosticData)
   // const {height, width} = size
   const width = propWidth - 50
   // console.log('data', stationData, propHeight, station)
-  const dataKey = stationData.dataKey
+  // const dataKey = stationData.dataKey
   // const propHeight = 520
   // const {plotData: data, name, yearKey: categories} = data
   // const height = propHeight ? `${600-20}px` : '200px'
@@ -238,7 +243,7 @@ export function makeConfig(stationData, {propHeight, propWidth}, station, agnost
   // console.log('agnosticData', agnosticData)
   const rawBoxplotFormat = makeBoxplotData(agnosticData.raw)
   const adjBoxplotFormat = makeBoxplotData(agnosticData.adj)
-  const reshapedData = reshapeData(stationData)
+  // const reshapedData = reshapeData(stationData)
   const inputData = Object.create({})
   if(dataType === 'both'){
     inputData.raw = makeBoxplotData(agnosticData.raw)
@@ -259,15 +264,26 @@ export function makeConfig(stationData, {propHeight, propWidth}, station, agnost
   // console.log('reshapedData', reshapedData)
   // console.log('reshapedDataBoth', reshapedDataBoth)
   const seriesArray = []
+  let  categories
+
   for(const dataType in reshapedDataBoth){
     const currData = reshapedDataBoth[dataType]
     const currSeries = currData.series
+    // let mostRecentThreeMonths
+    // if(currSeries.length >3){
+    //   const lastIndex = currSeries.length -1
+    //   mostRecentThreeMonths = [ currSeries[lastIndex-2], currSeries[lastIndex-1], currSeries[lastIndex]]
+    // }
+    // else{
+    //   mostRecentThreeMonths = currSeries
+    // }
     seriesArray.push(...currSeries)
+    // console.log('cotagoeries', currData)
+     categories = currData.categories
   }
-  // console.log('serieos array', seriesArray)
-  const bothTypesObject = {...reshapedData, series: seriesArray}
+  const bothTypesObject = {categories, series: seriesArray}
+  // console.log('bothTycategoriespesObject.series array', categories)
   // console.log('bothTypesObject', bothTypesObject)
-
   // console.log('itinit coreshapedDatanfig', reshapedData)
   // const newConfig = Object.assign({}, configInit, data.series, {})
   const newxaxis = {...configInit.xAxis}
@@ -276,7 +292,7 @@ export function makeConfig(stationData, {propHeight, propWidth}, station, agnost
       ...configInit, 
       chart: {...configInit.chart, width},
       series:bothTypesObject.series, 
-      xAxis:{...configInit.xAxis, categories: reshapedData.categories}, 
+      xAxis:{...configInit.xAxis, categories}, 
       // chart: {...configInit.chart, height},
       title:{
         ...configInit.title,
@@ -306,25 +322,56 @@ const equals = (a, b) =>
 //     whiskerWidth: 3
 // }
 function reshapeData(inputData,dataType){
-  // console.log('type', dataType, 'input data', inputData)
-  
+  // console.log('type', dataType, 'input data', inputData, 'leng', Object.keys(inputData).length)
+    if(Object.keys(inputData).length >3){
+      const firstKey = Object.keys(inputData)[0];
+      delete inputData[firstKey];
+    }
+  // console.log('inputData', inputData)
   const seriesAr = []
   let categoriesAr
   let i = 0
+  const allDataYearsWithDuplicates = [] //  adding all data years here and then will do a set to delete duplicates. this is to get the years that will go at the bottom of the chart
+  for(const monthName in inputData){
+    const currDat = inputData[monthName]
+    const dataYears = currDat.yearKey
+    allDataYearsWithDuplicates.push(...dataYears)
+  }
+  const allDataYearsUnique = new Set(allDataYearsWithDuplicates)
+  const sortedYearLabels = [...allDataYearsUnique].sort((a, b) => a.localeCompare(b))
+  // console.log('sortedYearLabels', typeof(sortedYearLabels))
+  // console.log('sortedYearLabels', sortedYearLabels)
   // const colorAr = ["#f94144","#f3722c","#f8961e","#f9c74f","#90be6d","#43aa8b","#577590","#f94144","#f3722c","#f8961e","#f9c74f","#90be6d","#43aa8b","#577590","#f94144","#f3722c","#f8961e","#f9c74f","#90be6d","#43aa8b","#577590","#f94144","#f3722c","#f8961e","#f9c74f","#90be6d","#43aa8b","#577590","#f94144","#f3722c","#f8961e","#f9c74f","#90be6d","#43aa8b","#577590","#f94144","#f3722c","#f8961e","#f9c74f","#90be6d","#43aa8b","#577590","#f94144","#f3722c","#f8961e","#f9c74f","#90be6d","#43aa8b","#577590"]
-  const colorAr = ["#0fb5ae", "#4046ca", "#f68511", "#de3d82", "#7e84fa", "#72e06a", "#147af3", "#7326d3", "#e8c600", "#cb5d00", "#008f5d", "#bce931"]
+  // const colorAr = ["#0fb5ae", "#4046ca", "#f68511", "#de3d82", "#7e84fa", "#72e06a", "#147af3", "#7326d3", "#e8c600", "#cb5d00", "#008f5d", "#bce931"]
+  // const colorAr = ["#88e99a", "#a41415", "#aaf841", "#942bf3", "#769d31", "#69306e", "#2cf52b", "#f058a4", "#0b5313", "#edb4ec", "#19a71f", "#ab719e", "#f0e746", "#3451d3", "#fb7810", "#1aa7ee", "#914c0f", "#1ceaf9", "#4f4447", "#dee7bc", "#598d83", "#fab899"]
+  // const colorAr =["#85e8b7", "#f849b6", "#5ac230", "#961d6b", "#069668"]
+  const colorAr = ["#003f5c","#7a5195","#bc5090","#ef5675","#374c80","#ff764a","#ffa600"  ]
   for(const monthName in inputData){
     const monthData = inputData[monthName]
     // console.log('monthData', monthData)
     // console.log(i, monthName, colorAr[i])
     const dataColor = colorAr[i] ? colorAr[i] : 'black'
-    const {name, data, yearKey: categories} = monthData
+    // const {name, data, yearKey: categories} = monthData
+    const {name, data, yearKey} = monthData
+    const fullDataAr = []
+    sortedYearLabels.map((currYear, i)=>{ //mapping over list of full years. if a the list year doesn't exist in the datset will create blank data array
+      const currDataIndex = yearKey.indexOf(currYear)
+      if (currDataIndex >=0){
+        fullDataAr.push(data[currDataIndex])
+      }
+      else{
+        fullDataAr.push([])
+      }
+
+    })
+    // console.log('fullDataAr', fullDataAr)
+    // yearKey looks like this: ['2024', '2025', '2026', '2027']. Need to check against all data years because some will be missing years. for example, some datasets have the year 2023 but this one doesnt so need to ad a blank array or something for 2023
     const seriesName = dataType ?  `${name}${dataType}` : name
     // console.log('categories', categories)
     seriesAr.push(
       {
         name:seriesName, 
-        data, 
+        data: fullDataAr, 
         color:dataColor,
         colorIndex: dataColor,
         fillColor: dataColor,
@@ -334,15 +381,16 @@ function reshapeData(inputData,dataType){
         stemColor: 'black',
       }
     )
-    if(!categoriesAr){
-      categoriesAr = categories
-    }
-    if(!equals(categories, categoriesAr)){
-      console.log('different years')
-    }
+    // if(!categoriesAr){
+    //   categoriesAr = categories
+    // }
+    // if(!equals(categories, categoriesAr)){
+    //   console.log('different years', categories, categoriesAr)
+    // }
     i = i + 1
   }
-  return {series: seriesAr, categories: categoriesAr}
+  // console.log('returnObj', {series: seriesAr, categories: categoriesAr})
+  return {series: seriesAr, categories: sortedYearLabels}
 }
 
 

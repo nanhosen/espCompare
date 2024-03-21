@@ -1,26 +1,27 @@
-import React, {useEffect, useState, useContext, useReducer} from 'react';
-import Typography from '@mui/material/Typography';
+import React, {useEffect, useState, useContext, useRef} from 'react';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
-import AppContext from '../context/AppContext'
 
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Collapse from '@mui/material/Collapse';
+import InboxIcon from '@mui/icons-material/MoveToInbox';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import SendIcon from '@mui/icons-material/Send';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import StarBorder from '@mui/icons-material/StarBorder';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
+import CommentIcon from '@mui/icons-material/Comment';
 import ListItem from '@mui/material/ListItem';
+import AppContext from '../context/AppContext'
+import ChartTypePicker from './ChartTypePicker';
 import { styled } from '@mui/material/styles';
-import {basinGroups} from '../config'
-import FormControlLabel from '@mui/material/FormControlLabel';
-
 
 
 
@@ -126,65 +127,12 @@ const StyledIconButton = styled(ListItemSecondaryAction)(`
 // `}
 // `
 
-function makeBasinStatus(basinConfig, selectedStations, checkedBasinName, checkedBasinStatus){
-  const returnObj = Object.create({})
-  for(const basinName in basinConfig){
-    const basinInfo = basinConfig[basinName]
-    const basinStations = basinInfo.stations
-    const selectedBasinStations = basinStations.filter(currStation => selectedStations.indexOf(currStation)>=0)
-    const basinHasStations = selectedBasinStations.length >0
-    if(checkedBasinName && basinName === checkedBasinName){
-      returnObj[basinName] = !checkedBasinStatus
-    }
-    else{
-      if(basinHasStations){
-        // console.log('basi stations', basinStations)
-        // console.log('selectedBasinStations', selectedBasinStations)
-        const isIndeterminate = selectedBasinStations.length < basinStations.length
-        // console.log('is inderet', isIndeterminate)
-        returnObj[basinName] = isIndeterminate ? 'indeterminate' : true
-      }
-      else{
-        returnObj[basinName] = basinHasStations
-      }
-    }
-  }
-  // console.log('basin status return obj', returnObj)
-  return returnObj
-
-}
-function basinCheckboxReducer(state, action){
-  // console.log('iin basin checkboc reudcer', state, action)
-  const {type, payload} = action
-  const {checkedStations, basinName, stationHandleToggle, value} = payload
-  switch(type){
-    case 'basinCheckToggle':
-      const nextStatus = makeBasinStatus(basinGroups, checkedStations, basinName, state[basinName])
-      // console.log('next status', nextStatus)
-      // console.log('should be toggling station now', stationHandleToggle)
-      stationHandleToggle({type: 'basinToggle', value: {basinStatus:nextStatus, basinInfo: basinGroups}})
-      return {...nextStatus}
-    case 'stationCheckboxToggle':
-      // console.log('station checkbox toggle action', state, action)
-      const nextStatusCheckbox = makeBasinStatus(basinGroups, checkedStations)
-      // console.log('next status checkbox', nextStatusCheckbox)
-      return {...nextStatusCheckbox}
-    default:
-      console.log('in default data status reducer acase')        
-
-  }
-
-}
-
 export default function StationCheckList(props) {
   const context = useContext(AppContext)
   // console.log('station checklist props', props)
   const [open, setOpen] = React.useState(true);
-  const [basinOpen, dispatchBasinCheckboxStatus] = useReducer(basinCheckboxReducer, makeBasinStatus(basinGroups, context.stationCardList));
-
   const [checked, setChecked] = React.useState(context.stationCardList);
   const [stationList, setStationList] = useState([])
-  const basinList = Object.keys(basinGroups)
   useEffect(()=>{
     if(context.allStationList && context.allStationList.length > 0 ){
       setStationList(context.allStationList)
@@ -197,15 +145,6 @@ export default function StationCheckList(props) {
     setOpen(!open);
   };
 
-  const handleBasinClick = ({value, basinName, checkedStations, basinStationArray, stationHandleToggle}) => {
-    // console.log('handle basin click',value, basinName, checkedStations, basinStationArray)
-    // console.log('value', value)
-    // console.log('dispatching basin checkbo xstus')
-    dispatchBasinCheckboxStatus({type:'basinCheckToggle', payload:{checkedStations, basinName, stationHandleToggle, value}})
-    
-    // setBasinOpen(!basinOpen);
-  };
-
   // useEffect(()=>{
   //   if(props.open === false){
 
@@ -214,34 +153,17 @@ export default function StationCheckList(props) {
 
   // },[props.open])
 
-  // useEffect(()=>{
-  //   console.log('curr basinOpen', basinOpen)
-  // },[basinOpen])
+  useEffect(()=>{
+    // console.log('curr stationList', stationList)
+  },[stationList])
 
-  const handleToggle = ({type, value}={}) => {
-    // console.log('in handletoggle')
+  const handleToggle = ({type, value}={}) => () => {
     let newChecked
     // let newChecked = value !== 'none' ? [...checked] : []
     // console.log('ty[e', type, 'value', value)
     // console.log('new checked top', newChecked)
     if(type === 'all'){
       newChecked = stationList
-    }
-    else if(type === 'basinToggle'){
-      const {basinStatus, basinInfo} = value
-      if(basinStatus && basinInfo){
-        newChecked = []
-        for(const basin in basinInfo){
-          const basinStations = basinInfo[basin]['stations']
-          if(basinStatus[basin]){
-            newChecked.push(...basinStations)
-          }
-        }
-        // console.log('new checked', newChecked)
-
-
-      }
-
     }
     else if(type === 'checkbox'){
       const currentIndex = checked.indexOf(value);
@@ -251,7 +173,6 @@ export default function StationCheckList(props) {
       } else {
         newChecked.splice(currentIndex, 1);
       }
-      
     }
     else if(type === 'only'){
       if(!value){
@@ -262,23 +183,23 @@ export default function StationCheckList(props) {
     }
     
     // if(value!== 'all' && value!=='none'){
-      //   const currentIndex = checked.indexOf(value);
-      //   newChecked = [...checked]
-      //   if (currentIndex === -1) {
-        //     newChecked.push(value);
-        //   } else {
-          //     newChecked.splice(currentIndex, 1);
-          //   }
-          // }
-          // else{
-            //   newChecked = value === 'none' ? [] : stationList
-            // }
-            // console.log('new checked bottom', newChecked)
-    dispatchBasinCheckboxStatus({type:'stationCheckboxToggle', payload:{checkedStations:newChecked}})
+    //   const currentIndex = checked.indexOf(value);
+    //   newChecked = [...checked]
+    //   if (currentIndex === -1) {
+    //     newChecked.push(value);
+    //   } else {
+    //     newChecked.splice(currentIndex, 1);
+    //   }
+    // }
+    // else{
+    //   newChecked = value === 'none' ? [] : stationList
+    // }
+    // console.log('new checked bottom', newChecked)
     setChecked(newChecked)
     // console.log('newChecked', newChecked)
     context.setStationCardList(newChecked)
   };
+
   return (
     <List
       sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', pt:0, mt:0, pb:0, mb:0 }}
@@ -301,133 +222,6 @@ export default function StationCheckList(props) {
       </ListItemButton>
       <Collapse in={open} timeout="auto" unmountOnExit>
         <List dense sx={{ pl:'25px', bgcolor: 'background.paper', pt:0, mt:0, pb:0, mb:0 }}>
-            {basinList.map((basinName) => {
-              const basinInfo = basinGroups[basinName]
-              const basinStationArray = basinInfo['stations']
-              const labelIdBasin = `checkbox-list-label-${basinName}`
-              const basinComponentStart1 = <CustomListItem
-                  key={basinName}
-                  // sx={{height:'25px'}}
-                  disablePadding
-                  dense
-                  // sx={{pt:0, pb:0, mt:0, mb:0, pr:0, pl:0}}
-                  >
-                  <FormControlLabel
-                    // label={basinInfo.printName}
-                    label={<Typography sx={{fontSize:'15px'}}>{basinInfo.printName}</Typography>}
-                    sx={{fontSize: '1px'}}
-                    control={
-                      <Checkbox
-                        size="small"
-                        edge="start"
-                        checked={basinOpen ? basinOpen[basinName] : false}
-                        value={basinName}
-                        tabIndex={-1}
-                        disableRipple
-                        inputProps={{ 'aria-labelledby': labelIdBasin}}
-                        onChange={(e)=>handleBasinClick({value: e.target.value, basinName, checkedStations: context.stationCardList, basinStationArray, stationHandleToggle: handleToggle})}
-                        // sx={{pr:0, }}
-                        indeterminate={basinOpen[basinName]==='indeterminate'}
-                        sx={{pt:0, pb:0}}
-                      />
-                    }
-                  />
-                  
-                  
-                  
-                </CustomListItem>
-
-              const component2Array = [basinComponentStart1]
-              const components = basinStationArray.map((stationName,i) =>{
-                component2Array.push(<StationCheckListInner value={stationName} key={i} handleToggle={handleToggle} checked={checked}/>)
-                return <StationCheckListInner value={stationName} handleToggle={handleToggle} key={i+1} checked={checked}/>
-              })
-              return component2Array
-              {/* console.log('components', components) */}
-            })}
-            <ListItem
-              key={'none'}
-              // sx={{height:'25px'}}
-              disablePadding
-              dense
-              // sx={{pt:1, pb:0, mt:0, mb:0}}
-            >
-              
-              {/* <Stack direction="row" spacing={0}> */}
-                <Button
-                  size="small"
-                  onClick={()=>handleToggle({type:'all'})}
-                >
-                  Select All
-                </Button>
-
-              {/* </Stack> */}
-            </ListItem>
-
-          </List>
-      </Collapse>
-    </List>
-  );
-}
-
-
-
-function StationCheckListInner(props){
-  const {value, handleToggle, checked} = props
-  const labelId = `checkbox-list-label-${value}`;
-
-              return (
-                <ListItem
-                  key={value}
-                  // sx={{height:'25px'}}
-                  // disablePadding
-                  dense
-                  sx={{pt:0, pb:0, mt:0, mb:0, pl:0}}
-                  alignItems="flex-start"
-                  disableGutters
-                  >
-                  <ListItemButton role={undefined} onClick={()=>handleToggle({type: 'checkbox', value}) } focusVisibleClassName='focused' dense sx={{pt:0, pb:0}}>
-                    <ListItemIcon>
-                      <Checkbox
-                        size="small"
-                        edge="start"
-                        checked={checked.indexOf(value) !== -1}
-                        tabIndex={-1}
-                        disableRipple
-                        inputProps={{ 'aria-labelledby': labelId }}
-                        sx={{pt:0, pb:0, pr:0}}
-                      />
-                    </ListItemIcon>
-                    <ListItemText id={labelId} primary={`${value}`} sx={{pl:0, ml:0}}/>
-                  </ListItemButton>
-                  <ListItemSecondaryAction
-                    sx={{
-                      mr:0,
-                      visibility: 'visible',
-                      opacity:0,
-                      '&:hover, &:focus': {
-                        // visibility:'hidden'
-                        opacity:1
-                      }
-                    }}
-                  >
-                    <Button 
-                      variant="text" 
-                      size="small"
-                      onClick={()=>handleToggle({type: 'only', value}) } 
-                    >
-                      Only
-                    </Button>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              );
-} 
-
-
-
-
-
-{/* <List dense sx={{ pl:'25px', bgcolor: 'background.paper', pt:0, mt:0, pb:0, mb:0 }}>
           {stationList.map((value) => {
             const labelId = `checkbox-list-label-${value}`;
 
@@ -493,45 +287,21 @@ function StationCheckListInner(props){
           >
             
             {/* <Stack direction="row" spacing={0}> */}
-              // <Button
-              //   size="small"
-              //   onClick={handleToggle({type:'all'})}
-              // >
-              //   Select All
-              // </Button>
+              <Button
+                size="small"
+                onClick={handleToggle({type:'all'})}
+              >
+                Select All
+              </Button>
 
             {/* </Stack> */}
-          // </ListItem>
+          </ListItem>
 
-        // </List> */}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        </List>
+      </Collapse>
+    </List>
+  );
+}
 
 
 

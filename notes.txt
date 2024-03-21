@@ -1,0 +1,9 @@
+-make it so that station cards are in the same order as the station stationCardList
+-make sure that the order of the stations is correct (n to south)
+-dispatchSetStationCompareDates in dataprovider uses the highcharts median data thing that I want to get rid of
+-combine the config code for both the chart things
+-dynamic initial dates in date compare. right now it is hard coded
+-take a bunch of the logic in the dataprovider out and put it in an action 
+-look in to usememo
+- in table date picker have a bunch of leftover stuff from station checklist that needs to be cleaned up
+-make init date state sets init date. need to turn into full reducer to init all of the dates so that it is dynamic. LIke the code that is in the date picker right now needs to go into there.

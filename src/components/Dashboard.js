@@ -26,6 +26,7 @@ import AppContext from '../context/AppContext'
 import ColumnTableMaker from './ColumnTableMaker';
 import LoadingPage from './LoadingPage';
 import SideBar from './SideBar';
+import SingleStationPage from './SingleStationPage';
 
 function Copyright(props) {
   return (
@@ -92,10 +93,21 @@ const returnMainContent = (type, status, loadingPageText)=>{
   // console.log('type', type, 'status', status)
   if(status === 'done'){
     if(type === 'chart'){
+      // return <SingleStationPage />
       return <ColumnChartMaker />
     }
     else if(type === 'table'){
+      // return <SingleStationPage />
       return <ColumnTableMaker />
+    }
+    else if(type === 'singleStation'){
+      return <>
+        <ColumnChartMaker chartType = {'box'}/>
+        <ColumnChartMaker chartType = {'column'}/>
+        <ColumnChartMaker chartType = {'allTrace'}/>
+        <ColumnTableMaker />
+      </>
+
     }
     else{
       return `wrong content type ${type}`
@@ -118,6 +130,19 @@ function DashboardContent() {
   const [open, setOpen] = React.useState(true);
   const [refHeight, setRefHeight] = useState(200)
   const chartRef = useRef(null)
+  const [displayType, setDisplayType] = useState(context.toggleChartTable)
+
+  useEffect(()=>{
+    if(context.stationCardList.length === 1){
+      setDisplayType('singleStation')
+    }
+    else{
+      if(context.toggleChartTable !== displayType){
+        setDisplayType(context.toggleChartTable)
+      }
+    }
+
+  },[context.toggleChartTable, context.stationCardList, displayType])
   const toggleDrawer = () => {
     console.log('toggled drawere will now be', !open)
     setOpen(!open);
@@ -184,7 +209,7 @@ function DashboardContent() {
           <Toolbar />
           <Container maxWidth={false} sx={{ mt: 4, mb: 4 }} ref={chartRef}>
             <Grid container spacing={1}>
-              {returnMainContent(context.toggleChartTable, context.dataStatus?.status, context.dataStatus?.text)}
+              {returnMainContent(displayType, context.dataStatus?.status, context.dataStatus?.text)}
               {/* <Grid item xs={12} md={8} lg={9}>
                 <Paper
                   sx={{

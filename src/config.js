@@ -1,29 +1,64 @@
 
 // const stationIds = ["GLDA3"]
-const stationIds = ["GBRW4","GRNU1","YDLC2","TPIC2","CLSC2","GJLOC","BMDC2","MPSC2","DRGC2","VCRC2","NVRN5","GLDA3"]
+// const stationIds = ["GBRW4","GRNU1","YDLC2","TPIC2","CLSC2","GJLOC","BMDC2","MPSC2","DRGC2","VCRC2","NVRN5","GLDA3"]
 // const stationIds = ["YDLC2","GJLOC","DRGC2","NVRN5","VCRC2","TPIC2","CLSC2","BMDC2","MPSC2","GRNU1","GBRW4","GLDA3"]
 // const dataMonths = ['apr22']
 // const dataMonths = [ 'jan22', 'feb22', 'mar22', 'apr22', 'may22']
 // const startYear = 2021
 // const startMonth = 12
+const basinGroups = {
+  green: {
+    stations:['GBRW4', 'GRNU1', 'YDLC2'],
+    printName: 'Green'
+  },
+  gunnison: {
+    stations:['TPIC2', 'BMDC2', 'MPSC2', 'CLSC2','GJLOC','GJLOCREG'],
+    printName: 'Gunnison'
+  },
+  sanJuan: {
+    stations:['DRGC2', 'VCRC2', 'NVRN5'],
+    printName: 'San Juan'
+  },
+  powell: {
+    stations:['GLDA3'],
+    printName: 'Powell'
+  }
+}
 
-function makeDataMonths(startYear, startMonth, endYear = new Date().getFullYear(), endMonth = new Date().getMonth() + 1){
-  // const dataMonths = []
+const stationIds = (() => {
+  const returnAr = []
+  for(const basinName in basinGroups){
+    // console.log('basin name', basinName)
+    const groupStations = basinGroups[basinName]['stations']
+    returnAr.push(...groupStations)
+  }
+  // console.log('returnAr', returnAr)
+  return [...returnAr]
+})()
+
+
+const settings = {
+  defaultChartDataType: 'raw'
+}
+
+function makeDataMonths(startYear, startMonth, lastDate = new Date()){
+  const endDateMath = lastDate.setMonth(lastDate.getMonth()+3)
+  const endDate = new Date(endDateMath)
+  const endMonth = endDate.getMonth()
+  const endYear = endDate.getFullYear()
+  const currYear = new Date().toLocaleDateString('en-US', {year:  "2-digit"})
   const dataObj = Object.create({})
   dataObj.orderAr = []
-  // const shortStartYear = startYear.toString().slice(2,4);
-  // const shortEndYear = endYear ? endYear.toString().slice(2,4) : undefined
-  // console.log('start year', shortStartYear, 'start month', startMonth, 'end year', shortEndYear, 'end month', endMonth)
   const startDate = new Date(`${startMonth}/1/${startYear}`)
-  const endDate = new Date(`${endMonth}/1/${endYear}`)
+  const endDate1 = new Date(`${endMonth}/1/${endYear}`)
   const nextMonth = new Date(startDate)
   nextMonth.setMonth(startDate.getMonth() + 1)
-  // console.log('startDta', startDate, 'end date', endDate, 'nextMonth', new Date(nextMonth))
   let currDate = startDate
   while(currDate <= endDate){
-    // const dateOptions = {month: 'short', year: "2-digit"}
     const monthShort = currDate.toLocaleDateString('en-US', {month: 'short'}).toLowerCase()
     const pushYear = currDate.toLocaleDateString('en-US', {year:  "2-digit"})
+    const waterYearFull = currDate.getMonth()+1>9 && currDate.getMonth()<13 ? currDate.getFullYear()+1: currDate.getFullYear()
+    const waterYear = waterYearFull.toString().slice(2, 4)
     const monthYear =  `${monthShort}${pushYear}`
     dataObj.orderAr.push(monthYear)
     dataObj[monthYear] = {
@@ -31,9 +66,6 @@ function makeDataMonths(startYear, startMonth, endYear = new Date().getFullYear(
       monthNum: monthNumMap[monthShort]['monthNum'],
       fullYear: currDate.getFullYear()
     }
-    // console.log('this thing', `${monthShort}${pushYear}`)
-    // console.log('currDate', currDate, currDate.toLocaleDateString('en-US', {month: 'short'}).toLowerCase(), currDate.toLocaleDateString('en-US', {year:  "2-digit"}))
-    // dataMonths.push(`${currDate.}`)
     currDate.setMonth(currDate.getMonth() + 1)
   }
   // console.log('dataObj', dataObj)
@@ -103,6 +135,7 @@ const monthNumMap = {
 }
 
 
-export {stationIds, makeDataMonths}
+
+export {stationIds, makeDataMonths, settings, basinGroups}
 
 // https://www.cbrfc.noaa.gov/outgoing/32month/archive/adj/dec21/ADJ.2022-12-01.RAW.GLDA3.dec21.txt

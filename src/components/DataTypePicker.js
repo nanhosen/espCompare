@@ -7,7 +7,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 
 
-import React, {  useContext} from 'react';
+import React, {useState,  useContext, useEffect} from 'react';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -22,8 +22,9 @@ import AppContext from '../context/AppContext'
 
 export default function DataTypePicker(props) {
   const context = useContext(AppContext)
-  const [open, setOpen] = React.useState(true);
-  const [alignment, setAlignment] = React.useState('left');
+  const [open, setOpen] = useState(true);
+  const [alignment, setAlignment] = useState('left');
+  const [buttons, setButtons] = useState([])
 
   const handleChange = (event, nextView) => {
     // setAlignment(newAlignment);
@@ -31,6 +32,19 @@ export default function DataTypePicker(props) {
     context.setDataType(nextView);
   };
 
+  useEffect(()=>{
+    setButtons(returnButtons(context.toggleChartTable))
+    // console.log('context', context)
+    // {context.toggleChartTable === 'table'
+
+  },[context.toggleChartTable])
+  
+  // const buttons = [
+  //   <ToggleButton value = "raw"  key="Raw">Raw</ToggleButton>,
+  //   <ToggleButton value = "adj"  key="Adj">Adj</ToggleButton>,
+  //   <ToggleButton value = "both"  key="Both">Both</ToggleButton>
+  // ];
+  
 
   // const handleChange = (event, nextView) => {
   //   console.log('clicked', event, nextView, context)
@@ -71,11 +85,29 @@ export default function DataTypePicker(props) {
       </ListItemButton>
       <Collapse in={open} timeout="auto" unmountOnExit>
         <ToggleButtonGroup  size="small"  variant="text" aria-label="small button group"  {...control}>
-          <ToggleButton value = "raw"  key="Raw">Raw</ToggleButton>
-          <ToggleButton value = "adj"  key="Adj">Adj</ToggleButton>
-          <ToggleButton value = "both"  key="Both">Both</ToggleButton>
+          
+          {buttons}
         </ToggleButtonGroup>
       </Collapse>
     </List>
   );
+}
+
+
+function returnButtons(displayType){
+  // console.log('dtatype', displayType)
+  
+  const dataObj = {
+    raw:<ToggleButton value = "raw"  key="Raw">Raw</ToggleButton>,
+    adj:<ToggleButton value = "adj"  key="Adj">Adj</ToggleButton>,
+    both:<ToggleButton value = "both"  key="Both">Both</ToggleButton>
+  }
+
+  if(displayType === 'table'){
+    return [ dataObj.raw, dataObj.adj]
+  }
+  else{
+   return [ dataObj.raw, dataObj.adj, dataObj.both]
+  }
+
 }

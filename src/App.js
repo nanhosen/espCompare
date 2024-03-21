@@ -20,11 +20,14 @@ const theme = createTheme({
   //   danger: orange[500],
   // },
 });
+
+
+
 function App() {
   console.log('rendering app')
   return (
     <div className="App">
-    <Profiler id="first" onRender={(input)=>{console.log(input)}}>
+    <Profiler id="first" onRender={(input)=>{}}>
       <DataProvider>
         <ThemeProvider theme={theme}>
           <Dashboard />

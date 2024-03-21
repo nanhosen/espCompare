@@ -11,6 +11,7 @@ import LayersIcon from '@mui/icons-material/Layers';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import StationCheckList from './StationCheckList';
 import ChartTypePicker from './ChartTypePicker';
+import TableTypePicker from './TableTypePicker';
 import ChartSizePicker from './ChartSizePicker';
 import DisplayTypePicker from './DisplayTypePicker';
 import TableDatePicker from './TableDatePicker';
@@ -18,6 +19,7 @@ import DataTypePicker from './DataTypePicker';
 
 
 const makeListItems = (open, displayType)=>{
+  // console.log('open', open, 'displayType', displayType)
   if(displayType === 'chart'){
     return (
       <>
@@ -39,10 +41,29 @@ const makeListItems = (open, displayType)=>{
         <StationCheckList open = {open}/>
         <Divider sx={{ my: 1 }} />
         <DisplayTypePicker open = {open}/>
+        <TableTypePicker open = {open}/>
         <TableDatePicker />
         <Divider sx={{ my: 1 }} />
         <DataTypePicker />
 
+      </>
+    )
+  }
+  else if(displayType === 'singleStation'){
+    return (
+      <>
+        <StationCheckList open = {open}/>
+        <Divider sx={{ my: 1 }} />
+        {/* <DisplayTypePicker open = {open}/> */}
+        {/* <Divider sx={{ my: 1 }} /> */}
+        {/* <ChartTypePicker open = {open}/> */}
+        {/* <Divider sx={{ my: 1 }} /> */}
+        <ChartSizePicker open = {open}/>
+        <Divider sx={{ my: 1 }} />
+        <TableDatePicker />
+        <Divider sx={{ my: 1 }} />
+        <DataTypePicker />
+        {/* <DataTypePicker /> */}
       </>
     )
   }

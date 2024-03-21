@@ -108,6 +108,19 @@ export default function SideBar(props){
 
   const [open, setOpen] = React.useState(isOpen);
   const [refHeight, setRefHeight] = useState(200)
+  const [displayType, setDisplayType] = useState(context.toggleChartTable)
+
+  useEffect(()=>{
+    if(context.stationCardList.length === 1){
+      setDisplayType('singleStation')
+    }
+    else{
+      if(context.toggleChartTable !== displayType){
+        setDisplayType(context.toggleChartTable)
+      }
+    }
+
+  },[context.toggleChartTable, context.stationCardList, displayType])
   const chartRef = useRef(null)
   const toggleDrawer = () => {
     console.log('toggled drawere will now be', !open)
@@ -153,7 +166,7 @@ export default function SideBar(props){
           </Toolbar>
           <Divider />
           <List component="nav" dense>
-            {mainListItems(open, context.toggleChartTable)}
+            {mainListItems(open, displayType)}
             {/* <Divider sx={{ my: 1 }} /> */}
             {secondaryListItems}
           </List>

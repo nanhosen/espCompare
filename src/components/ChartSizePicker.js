@@ -93,7 +93,7 @@ function DiscreteSliderValues() {
       <Slider
         size="small"
         aria-label=""
-        defaultValue={6}
+        defaultValue={context.chartSize}
         valueLabelFormat={valueLabelFormat}
         getAriaValueText={valuetext}
         step={null}

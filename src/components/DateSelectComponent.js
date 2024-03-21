@@ -11,15 +11,43 @@ export default function SelectVariants(props) {
   const context = useContext(AppContext)
   const [age, setAge] = React.useState('');
   const [dateListOne, setDateListOne] = useState(props.stationDates)
+  const [selectValue, setSelectValue] = useState('')
   // console.log('station dates', props.stationDates, 'station', props.station, 'id', props.id)
 
   useEffect(()=>{
     // console.log(context.stationCompareDates, context.stationCompareDates[props.station][props.id])
     // console.log('props here', props)
-  },[context.stationCompareDates])
+    if(props.id && props.station && props.station!=='bulk' && context.stationCompareDates && context.dataType){
+
+      const type = context.stationCompareDates[props.station][context.dataType][props.id] ?context.stationCompareDates[props.station][context.dataType][props.id]  : ''
+      setSelectValue(type)
+    }
+    if(props.station === 'bulk'){
+
+    } 
+  },[context.stationCompareDates, props, context.dataType])
+
+  useEffect(()=>{
+    if(props.station === 'bulk' && props.id){
+      if(context.bulkDates.selectedDates[props.id]){
+        setSelectValue(context.bulkDates.selectedDates[props.id])
+      }
+    }
+  },[context.bulkDates, props, context.dataType])
 
   const handleChange = (event) => {
     setAge(event.target.value);
+    // console.log('onchange select dispatch');
+    context.dispatchSetStationCompareDates({type: props.station === 'bulk' ? 'bulkSet' : 'setDate', payload: {station: props.station, dateId: props.id, dataType: context.dataType, setDate: event.target.value}})
+    if(props.station === 'bulk'){
+      console.log('dispatching from dateselectcomponent line 43')
+      context.dispatchBulkDatesUpdate({
+        type: 'bulkSet', 
+        payload: {dateId: props.id, setDate: event.target.value}
+      })
+    }
+
+
     // context.
   };
   // const handleFormat = (newFormats, stateKey, dispatchFn) => {
@@ -48,15 +76,16 @@ export default function SelectVariants(props) {
         <Select
           labelId="demo-simple-select-standard-label"
           id="demo-simple-select-standard"
-          value={context.stationCompareDates[props.station][props.id] ? context.stationCompareDates[props.station][props.id] : ''}
-          onChange={(event)=>context.dispatchSetStationCompareDates({type: 'setDate', payload: {station: props.station, dateId: props.id, setDate: event.target.value}})}
+          value={selectValue}
+          onChange={handleChange}
+          // onChange={(event)=>{console.log('onchange select dispatch');return context.dispatchSetStationCompareDates({type: props.station === 'bulk' ? 'bulkSet' : 'setDate', payload: {station: props.station, dateId: props.id, dataType: context.dataType, setDate: event.target.value}})}}
           label={props.label}
         >
         {
           dateListOne.map((currDate, i) =>{
             {/* console.log('datelist', context.stationCompareDates[props.station][props.id]) */}
-            const setDate = context.stationCompareDates[props.station][props.id]
-            const otherDate =  context.stationCompareDates[props.station][otherId]
+            {/* const setDate = context.stationCompareDates[props.station][props.id] */}
+            const otherDate =  props.station !== 'bulk' ? context.stationCompareDates[props.station][otherId] : null
             {/* console.log('currDate', currDate, 'otherdate', otherDate) */}
             const isDisabled = otherDate === currDate ? true : false
             {/* const selectedDate = context.stationCompareDates[props.station][props.id] */}

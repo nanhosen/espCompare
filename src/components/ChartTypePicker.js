@@ -1,6 +1,7 @@
 import CandlestickChartIcon from '@mui/icons-material/CandlestickChart';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
+import StackedLineChartIcon from '@mui/icons-material/StackedLineChart';
 
 
 
@@ -51,7 +52,6 @@ export default function ChartTypePicker(props) {
       </ListItemButton>
       <Collapse in={open} timeout="auto" unmountOnExit>
         <List component="div" disablePadding dense>
-
               <ListItemButton
                 selected={context.displayChartType === 'column'}
                 onClick={(event) => handleChange(event, 'column')}
@@ -73,6 +73,17 @@ export default function ChartTypePicker(props) {
                   <CandlestickChartIcon />
                 </ListItemIcon>
                 <ListItemText primary="Box Plot" />
+              </ListItemButton>
+              <ListItemButton
+                selected={context.displayChartType === 'allTrace'}
+                onClick={(event) => handleChange(event, 'allTrace')}
+                sx={{ pl: 4,pt:0, pb:0, mt:0, mb:0  }}
+                dense
+              >
+                <ListItemIcon>
+                  <StackedLineChartIcon />
+                </ListItemIcon>
+                <ListItemText primary="All Traces" />
               </ListItemButton>
 
         </List>

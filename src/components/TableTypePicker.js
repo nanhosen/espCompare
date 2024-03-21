@@ -1,10 +1,11 @@
 import CandlestickChartIcon from '@mui/icons-material/CandlestickChart';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
+import StackedLineChartIcon from '@mui/icons-material/StackedLineChart';
 
 
 
-import React, {  useContext, useEffect} from 'react';
+import React, {  useContext} from 'react';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -13,20 +14,16 @@ import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import AppContext from '../context/AppContext'
-import TableViewIcon from '@mui/icons-material/TableView';
-import InsertChartIcon from '@mui/icons-material/InsertChart';
-import ViewListIcon from '@mui/icons-material/ViewList';
 
-export default function DisplayTypePicker(props) {
+
+export default function TableTypePicker(props) {
   const context = useContext(AppContext)
   const [open, setOpen] = React.useState(true);
 
-  useEffect(()=>{
-    // console.log('context', context)
-  },[context])
+
   const handleChange = (event, nextView) => {
     // console.log('clicked', event, nextView, context)
-    context.setToggleChartTable(nextView);
+    context.setDisplayTableType(nextView);
   };
 
 
@@ -48,36 +45,36 @@ export default function DisplayTypePicker(props) {
      
       <ListItemButton onClick={handleClick}>
         <ListItemIcon>
-          <TableViewIcon />
+          <GraphicEqIcon />
         </ListItemIcon>
-        <ListItemText primary="Display Type" />
+        <ListItemText primary="Table Type" />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
       <Collapse in={open} timeout="auto" unmountOnExit>
         <List component="div" disablePadding dense>
-
               <ListItemButton
-                selected={context.toggleChartTable === 'chart'}
-                onClick={(event) => handleChange(event, 'chart')}
+                selected={context.displayTableType === 'original'}
+                onClick={(event) => handleChange(event, 'original')}
                 sx={{ pl: 4,pt:0, pb:0, mt:0, mb:0  }}
                 dense
               >
                 <ListItemIcon>
-                  <InsertChartIcon />
+                  <BarChartIcon />
                 </ListItemIcon>
-                <ListItemText primary="Chart" />
+                <ListItemText primary="Yearly" />
               </ListItemButton>
               <ListItemButton
-                selected={context.toggleChartTable === 'table'}
-                onClick={(event) => handleChange(event, 'table')}
+                selected={context.displayTableType === 'new'}
+                onClick={(event) => handleChange(event, 'new')}
                 sx={{ pl: 4,pt:0, pb:0, mt:0, mb:0  }}
                 dense
               >
                 <ListItemIcon>
-                  <ViewListIcon />
+                  <CandlestickChartIcon />
                 </ListItemIcon>
-                <ListItemText primary="Table" />
+                <ListItemText primary="Monthly" />
               </ListItemButton>
+              
 
         </List>
       </Collapse>

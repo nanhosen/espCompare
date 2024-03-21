@@ -32,13 +32,16 @@ export function formatForHighcharts(statData = {}, i){
 //         headerFormat: '<em>Experiment No {point.key}</em><br/>'
 //     }
 // }
+  function formatAllTraceSeriesHighcharts(){
+    
+  }
   function formatBoxPlotHighcharts(){
     const boxData = []
     const oulierData = []
     const series = []
 
     //box data order: [bottom whisker, bottom of box, median, top of box, top whisker]
-    //outliers is separate array of [min, max]
+    //outliers is separate array of [min, max] 
     // console.log('statData boc', statData)
     const fcstYearDataObj = Object.create({})
     fcstYearDataObj.statType = 'box'
@@ -114,48 +117,132 @@ export function formatForHighcharts(statData = {}, i){
 
 
 
-export function formatESPData(data, i){
+export function formatESPData(data, returnType = 'statData'){
+  // console.log(returnType, 'return type')
   // const {month, station, data} = espData
   // console.log('month', month)
-  // console.log('dataHere', data)
+  // console.log('dataHere', data) //data okay here
   // console.log('making forecast data object for station', station)
-  // const forecastDataByYear = makeYearFcstYearObj(data)
-  const testThis = new fullObjectCapabilities(data)
-  const statData = testThis.getFcstYearMedianNinetyTenth()
+  // const forecastDataByYear = parseStringData(data)
+  let testThis = new fullObjectCapabilities(data) //data okay here
+  // const yearlyData = testThis.getMonthlyAndYearlyStats()
+  // const statData = testThis.getFcstYearMedianNinetyTenth()
+  // const monthlyData = testThis.getMontlyVolumeStats()
+  // const returnYearly = Object.create({})
+  // for(const fcstYear in monthlyData){
+  //   const monthlyStats = monthlyData[fcstYear]
+  //   const yearlyStats = statData[fcstYear]
+  //   returnYearly[fcstYear] = {monthlyStats, ...yearlyStats}
+  // }
+  let yearlyData = testThis.getMonthlyAndYearlyStats() //data not okay here
+  // console.log('data after format esp function thing', yearlyData)
+  // const statData = testThis.getFcstYearMedianNinetyTenth() // this was original return but added monthly and moved everything into the thing it calls now
+
+  // console.log('testThis getAllTraceData', testThis.getAllTraceData())
   // console.log('medianData', medianData)
 // 
   // console.log('testThis', 'month', month, testThis.getFcstYearMedianNinetyTenth())
   // console.log(testThis.getCandlestickData())
   // console.log('median', JSON.stringify(testThis.getFcstYearStats('median')))
-  return statData
+  return returnType === 'allTraceData' ? testThis.getAllTraceData() : yearlyData 
   // return testThis.getFcstYearStats('median')
 }
 
 function fullObjectCapabilities(data){
   // console.log('making forecast data object fullOjbectCapabilities')
-  const fullDataObject = makeYearFcstYearObj(data)
+  // console.log('data in full Object capabilities', data) //data okay here
+  // console.log('calling parseStringData from fullObjectCapabilities')
+  let fullDataObject = parseStringData(data) //not okay here
+  // console.log('done calling parseStringData from fullObjectCapabilities')
+  // console.log('full data object', JSON.stringify(fullDataObject))
+  // fullDataObject returns data organized like this:
+  // {2024: (year of forecast)
+  //   1991: [ value, value, value, value] 1991 is the reforecast year. value is the monthy value indexed by month. So, the first value is january. only years with all 12 monts of data will be returned
+  //   1992: [ value, value, value, value]
+  // }
+  // console.log('full data object', fullDataObject)
   function getFcstYearAr(){
     return Object.keys(fullDataObject)
   }
+  function getMonthlyAndYearlyStats(){
+    let yearlyStats =getFcstYearMedianNinetyTenth()
+    let monthlyStats = getMontlyVolumeStats()
+    let returnYearly = Object.create({})
+    let yearlyStatYears = Object.keys(yearlyStats)
+    let monthlyStatYears = Object.keys(monthlyStats)
+    let combinedSet = new Set([...monthlyStatYears, ...yearlyStatYears]);
+    // console.log('combinedSet', combinedSet)
+    let allYearsSorted = [...combinedSet].sort((a, b) => a.localeCompare(b));
+    for(let fcstYear of allYearsSorted){
+      // console.log('fcstYear', fcstYear)
+      let monthlyStatData = monthlyStats[fcstYear]
+      let yearlyStatData = yearlyStats[fcstYear]
+      returnYearly[fcstYear] = {monthlyStatData, ...yearlyStatData}
+    }
+    return returnYearly
+  }
+  function getMonthyVolumes(){
+    let monthlyVolsAllYears = Object.create({})
+    for(let fcstYear in fullDataObject){
+      // dataByRefcstYear looks like this:
+      // {
+          // 1991: [45.709, 55.813, 46.987, 37.643, 40.212, 116.128, 114.744, 180.151, 82.905, 42.777, 27.006, 26.652] //Big Deal!!!!! This is starting in cotober ovtober october
+          // 1992: [30.578, 35.963, 31.08, 28.187, 29.785, 92.499, 161.099, 325.422, 513.128, 279.722, 209.134, 81.646]
+        // }
+      let refcstByMonth = Object.create({})  //this is an object that holds the reforecast values for each month.  The number of values is the number of reforecast years
+      let dataByRefcstYear = fullDataObject[fcstYear]
+      for(let refcstYear in dataByRefcstYear){
+        let monthlyRefcstVolumes = dataByRefcstYear[refcstYear] //this is an array. each value is a monthly forecast. the first forecast is jan, second is feb, etc // actually i think the first fcst is october
+        // console.log('date check', monthlyRefcstVolumes)
+        monthlyRefcstVolumes.map((monthlyVol, index)=>{
+          let monthNum = index + 1
+          if (!refcstByMonth.hasOwnProperty(monthNum)) {
+            refcstByMonth[monthNum] = [];
+          }
+          refcstByMonth[monthNum].push(monthlyVol)
+        })
+      }
+      monthlyVolsAllYears[fcstYear] = refcstByMonth
+      
+    }
+    return monthlyVolsAllYears
+  }
+
+  function getMontlyVolumeStats(){
+    let monthlyVolumes = getMonthyVolumes()
+    let monthlyVolumeStatsByYear = Object.create({})
+    for(let fcstYear in monthlyVolumes){
+      let fcstYearMonthlyData = monthlyVolumes[fcstYear]
+      let currYearMonthStats = Object.create({})
+      for(let fcstMonth in fcstYearMonthlyData){
+        let monthData = fcstYearMonthlyData[fcstMonth]
+        let monthlyStats = getPercentiles(monthData)
+        currYearMonthStats[fcstMonth]=monthlyStats
+      }
+      monthlyVolumeStatsByYear[fcstYear] = currYearMonthStats
+    }
+    return monthlyVolumeStatsByYear
+
+  }
   function getDataYearObYearSum() {
-    const summedObj = Object.create({})
-    const fcstYearAr = getFcstYearAr()
+    let summedObj = Object.create({})
+    let fcstYearAr = getFcstYearAr()
     fcstYearAr.map(currFcstYear=>{
-      const currFcstYearData = fullDataObject[currFcstYear]
+      let currFcstYearData = fullDataObject[currFcstYear]
       summedObj[currFcstYear] = Object.create({})
-      for(const currObYear in currFcstYearData){
-        const currObYearDataAr = currFcstYearData[currObYear]
+      for(let currObYear in currFcstYearData){
+        let currObYearDataAr = currFcstYearData[currObYear]
         summedObj[currFcstYear][currObYear] = jStat.sum(currObYearDataAr)
       }
     })
     return summedObj
   }
   function getDataYearObjYearAr(){
-    const dataYearObject = getDataYearObYearSum()
-    const flatObj = Object.create({})
-    for(const fcstYear in dataYearObject){
+    let dataYearObject = getDataYearObYearSum()
+    let flatObj = Object.create({})
+    for(let fcstYear in dataYearObject){
       flatObj[fcstYear] = []
-      for(const obYear in dataYearObject[fcstYear]){
+      for(let obYear in dataYearObject[fcstYear]){
         flatObj[fcstYear].push(dataYearObject[fcstYear][obYear])
       }
     }
@@ -167,11 +254,11 @@ function fullObjectCapabilities(data){
     returnObj.dataAr = []
     returnObj.yearAr = []
 
-    const fcstYearData = getDataYearObjYearAr()
+    let fcstYearData = getDataYearObjYearAr()
     returnObj.type = type
-    for(const fcstYear in fcstYearData){
+    for(let fcstYear in fcstYearData){
       returnObj.yearAr.push(fcstYear)
-      const fcstYearDataAr = fcstYearData[fcstYear]
+      let fcstYearDataAr = fcstYearData[fcstYear]
       if(type === 'median'){
         // returnObj[fcstYear]=jStat.median(fcstYearDataAr)
         returnObj[fcstYear]=jStat.mean(fcstYearDataAr)
@@ -185,20 +272,40 @@ function fullObjectCapabilities(data){
     }
     return returnObj
   }
+
+  function getAllTraceData(){
+    let returnObj = new Object({})
+    for (let forecastYear in fullDataObject){
+      let allTraceYearData = fullDataObject[forecastYear]
+      for(let traceYear in allTraceYearData){
+        let traceYearData = allTraceYearData[traceYear]
+        if(!returnObj[traceYear]){
+          returnObj[traceYear] = []
+        }
+        returnObj[traceYear] = [...returnObj[traceYear], ...traceYearData]
+
+
+      }
+    }
+    // console.log('returnObj', returnObj)
+    return {...returnObj}
+
+
+  }
   function getCandlestickData(){
     // An array of arrays with 5 or 4 values. In this case, the values correspond to x,open,high,low,close. If the first value is a string, it is applied as the name of the point, and the x value is inferred. The x value can also be omitted, in which case the inner arrays should be of length 4. Then the x value is automatically calculated, either starting at 0 and incremented by 1, or from pointStart and pointInterval given in the series options.
     let returnObj = Object.create({})
-    const returnAr = []
-    const ranges = []
-    const averages = []
-    const fcstYearData = getDataYearObjYearAr()
+    let returnAr = []
+    let ranges = []
+    let averages = []
+    let fcstYearData = getDataYearObjYearAr()
     // console.log('fcstyeardata', fcstYearData)
-    for(const fcstYear in fcstYearData){
-      console.log(fcstYear)
-      const fcstYearDataAr = fcstYearData[fcstYear]
-      const openClose = jStat.median(fcstYearDataAr)
-      const high = jStat.percentile(fcstYearDataAr, 0.9)
-      const low = jStat.percentile(fcstYearDataAr, 0.1)
+    for(let fcstYear in fcstYearData){
+      // console.log(fcstYear)
+      let fcstYearDataAr = fcstYearData[fcstYear]
+      let openClose = jStat.median(fcstYearDataAr)
+      let high = jStat.percentile(fcstYearDataAr, 0.9)
+      let low = jStat.percentile(fcstYearDataAr, 0.1)
       returnObj[fcstYear] = [openClose, high, low, openClose]
       returnAr.push([parseFloat(fcstYear), openClose, high, low, openClose])
       averages.push([parseFloat(fcstYear), openClose])
@@ -207,37 +314,60 @@ function fullObjectCapabilities(data){
     // console.log('ranges', JSON.stringify(ranges))
     // console.log('averages', JSON.stringify(averages))
   }
+
+  function getPercentiles(dataAr){
+    let median = jStat.median(dataAr)
+    // let ninety = jStat.percentile(dataAr, 0.9)
+    // let seventyfive = jStat.percentile(dataAr, 0.75)
+    // let seventy = jStat.percentile(dataAr, 0.70)
+    // let thirty = jStat.percentile(dataAr, 0.30)
+    // let twentyfive = jStat.percentile(dataAr, 0.25)
+    // let tenth = jStat.percentile(dataAr, 0.1)
+
+    let ninety = jStat.percentile(dataAr, 0.1)
+    let seventyfive = jStat.percentile(dataAr, 0.25)
+    let seventy = jStat.percentile(dataAr, 0.30)
+    let thirty = jStat.percentile(dataAr, 0.70)
+    let twentyfive = jStat.percentile(dataAr, 0.75)
+    let tenth = jStat.percentile(dataAr, 0.9)
+
+    let maxVal = Math.max(...dataAr)
+    let minVal = Math.min(...dataAr)
+    let sum = jStat.sum(dataAr)
+    return {median, ninety, seventyfive, seventy, thirty, twentyfive, tenth, sum, maxVal, minVal}
+  }
   function getFcstYearMedianNinetyTenth(){
     // An array of arrays with 5 or 4 values. In this case, the values correspond to x,open,high,low,close. If the first value is a string, it is applied as the name of the point, and the x value is inferred. The x value can also be omitted, in which case the inner arrays should be of length 4. Then the x value is automatically calculated, either starting at 0 and incremented by 1, or from pointStart and pointInterval given in the series options.
     let returnObj = Object.create({})
-    const returnAr = []
-    const ranges = []
-    const averages = []
-    const yearKey = []
-    const fcstYearData = getDataYearObjYearAr()
+    let returnAr = []
+    let ranges = []
+    let averages = []
+    let yearKey = []
+    let fcstYearData = getDataYearObjYearAr()
     // console.log('fcstyeardata', fcstYearData)
-    for(const fcstYear in fcstYearData){
+    for(let fcstYear in fcstYearData){
       yearKey.push(fcstYear)
       // console.log(fcstYear)
-      const fcstYearDataAr = fcstYearData[fcstYear]
-      const median = jStat.median(fcstYearDataAr)
-      // const ninety = jStat.percentile(fcstYearDataAr, 0.9)
-      // const seventyfive = jStat.percentile(fcstYearDataAr, 0.75)
-      // const seventy = jStat.percentile(fcstYearDataAr, 0.70)
-      // const thirty = jStat.percentile(fcstYearDataAr, 0.30)
-      // const twentyfive = jStat.percentile(fcstYearDataAr, 0.25)
-      // const tenth = jStat.percentile(fcstYearDataAr, 0.1)
+      let fcstYearDataAr = fcstYearData[fcstYear]
+      // console.log('fcst year', fcstYear, fcstYearDataAr)
+      let median = jStat.median(fcstYearDataAr)
+      // let ninety = jStat.percentile(fcstYearDataAr, 0.9)
+      // let seventyfive = jStat.percentile(fcstYearDataAr, 0.75)
+      // let seventy = jStat.percentile(fcstYearDataAr, 0.70)
+      // let thirty = jStat.percentile(fcstYearDataAr, 0.30)
+      // let twentyfive = jStat.percentile(fcstYearDataAr, 0.25)
+      // let tenth = jStat.percentile(fcstYearDataAr, 0.1)
 
-      const ninety = jStat.percentile(fcstYearDataAr, 0.1)
-      const seventyfive = jStat.percentile(fcstYearDataAr, 0.25)
-      const seventy = jStat.percentile(fcstYearDataAr, 0.30)
-      const thirty = jStat.percentile(fcstYearDataAr, 0.70)
-      const twentyfive = jStat.percentile(fcstYearDataAr, 0.75)
-      const tenth = jStat.percentile(fcstYearDataAr, 0.9)
+      let ninety = jStat.percentile(fcstYearDataAr, 0.1)
+      let seventyfive = jStat.percentile(fcstYearDataAr, 0.25)
+      let seventy = jStat.percentile(fcstYearDataAr, 0.30)
+      let thirty = jStat.percentile(fcstYearDataAr, 0.70)
+      let twentyfive = jStat.percentile(fcstYearDataAr, 0.75)
+      let tenth = jStat.percentile(fcstYearDataAr, 0.9)
 
-      const maxVal = Math.max(...fcstYearDataAr)
-      const minVal = Math.min(...fcstYearDataAr)
-      const sum = jStat.sum(fcstYearDataAr)
+      let maxVal = Math.max(...fcstYearDataAr)
+      let minVal = Math.min(...fcstYearDataAr)
+      let sum = jStat.sum(fcstYearDataAr)
       returnObj[fcstYear] = {median, ninety, seventyfive, seventy, thirty, twentyfive, tenth, sum, maxVal, minVal, yearData: fcstYearDataAr, yearKey}
       // // returnAr.push([parseFloat(fcstYear), openClose, high, low, openClose])
       // averages.push([parseFloat(fcstYear), openClose])
@@ -247,42 +377,96 @@ function fullObjectCapabilities(data){
     // console.log('ranges', JSON.stringify(ranges))
     // console.log('averages', JSON.stringify(averages))
   }
-  return {getDataYearObYearSum, getFcstYearAr, getDataYearObjYearAr, getCandlestickData, getFcstYearStats, fullDataObject, getFcstYearMedianNinetyTenth}
+  return {getMonthlyAndYearlyStats, getDataYearObYearSum, getFcstYearAr, getDataYearObjYearAr, getCandlestickData, getFcstYearStats, fullDataObject, getFcstYearMedianNinetyTenth, getAllTraceData}
 }
 
-function makeYearFcstYearObj(data){
-
+function parseStringData(data){
+  // console.log('in parse string data 382')
+  if(!data){
+    return {error: 'no data'}
+  }
+  // console.log('data', data)
   const dataSplit = data.split(/\r?\n/);
+  // console.log('data in to parseStringData', data)
+  // console.log('dataspltip', dataSplit)
   const yearData = dataSplit[2]
-  const yearArray = yearData.split(' ').filter(curr => curr.length > 0 && Number.isInteger(Number(curr)))
-  const forecastDataObject = Object.create({})
+  // console.log('yuear yearData', yearData)
+  // yearArray is the array of reforecast years
+  const yearArray = yearData.split(' ').filter(curr => curr.length > 0 && Number.isInteger(Number(curr))) 
+  // fcstDates is a object where keys are the forecast water year and the values are an array of months in that water year. tyring to get rid of incomplete water years
+  const fcstDates = {}
+  // console.log('year array', yearArray)
+  //  unfiltered object has all years data. Have one that is filtered so that incomplete water year data isn't displayed
+  const unfilteredForecastDataObject = Object.create({})
   dataSplit.map((currRow, i)=>{
+    // const yearKeys = []
+    // console.log('currRow', currRow)
+
     if(i>2){
       const currRowAr = currRow.split(' ').filter(curr => curr.length > 0 )
-      // console.log(currRowAr[0])
+      // console.log('currRowAr', currRowAr)
+      // console.log('currRowAr[0]', currRowAr[0])
       if(currRowAr[0]){
+        const currFcstDateFull = currRowAr[0]
+        // if(yearKeys.indexOf(currFcstDateFull)<0){
+        //   yearKeys.push(currFcstDateFull)
+        // }
 
         const currFcstDate = currRowAr[0].split('/')
         const currFcstMonth = currFcstDate[0]
         const currFcstYear = currFcstDate[1]
+        // console.log('currFcstDate', currFcstDate)
+        // console.log('currFcstMonth', currFcstMonth)
+        // console.log('currFcstYear', currFcstYear)
         let currFcstWaterYear = currFcstMonth >=10 && currFcstMonth<=12 ? makeWaterYear(currFcstYear) : currFcstYear
+        // console.log('currFcstWaterYear', currFcstWaterYear)
+        // Check if the year is already a key in fcstDates
+        if (!fcstDates.hasOwnProperty(currFcstWaterYear)) {
+          fcstDates[currFcstWaterYear] = [];
+        }
+        fcstDates[currFcstWaterYear].push(currFcstMonth)
         currRowAr.splice(0, 1)
-        if(!forecastDataObject[currFcstWaterYear]){
-          forecastDataObject[currFcstWaterYear] = {}
+        if(!unfilteredForecastDataObject[currFcstWaterYear]){
+          unfilteredForecastDataObject[currFcstWaterYear] = {}
         }
         currRowAr.map((currVol, i)=>{
-          if(yearArray[i] && !forecastDataObject[currFcstWaterYear][yearArray[i]]){
-            forecastDataObject[currFcstWaterYear][yearArray[i]] = []
+          // console.log('year array', yearArray, 'i', i, 'currvol', currVol)
+          // console.log('forecastdatobjcect,', unfilteredForecastDataObject, 'currfcstwatersyera', currFcstWaterYear)
+          if(yearArray[i] && !unfilteredForecastDataObject[currFcstWaterYear][yearArray[i]]){
+            unfilteredForecastDataObject[currFcstWaterYear][yearArray[i]] = []
           }
-          forecastDataObject[currFcstWaterYear][yearArray[i]].push(parseFloat(currVol))
+          unfilteredForecastDataObject[currFcstWaterYear][yearArray[i]].push(parseFloat(currVol))
           // console.log(currVol, yearArray[i])
         })
+        // unfilteredForecastDataObject[currFcstWaterYear]['yearKeys'].push(currFcstDateFull)
       }
       // console.log(currFcstDate)
     }
   })
-  // console.log('forecastDataObject', forecastDataObject)
-  return forecastDataObject
+  // unfilteredForecastDataObject.yearKeys = yearKeys
+  // console.log('fcstDates', fcstDates)
+  // console.log('yearArray', yearArray)
+  // console.log('unfilteredForecastDataObject', unfilteredForecastDataObject)
+  //  create new object that only has years with 12 months of data. That way partial years are not displayed. 
+  var filteredForecastDataObject = Object.create({})
+  // console.log('this should be empty',filteredForecastDataObject)
+  for (const fcstYear in unfilteredForecastDataObject) {
+    const reforecastData = unfilteredForecastDataObject[fcstYear]; //data is okay here
+    // console.log('reforecastData line 452', fcstYear, reforecastData) // raw data is okay here
+    const isValid = Object.values(reforecastData).every(array => array.length >= 12);
+    // console.log('reforecastData after isValid', fcstYear, reforecastData) //data is okay here
+
+    // console.log('is valid', isValid)
+    if (isValid) {
+      // console.log('reforecastData in If', fcstYear, reforecastData) //data is okay here
+
+        filteredForecastDataObject[fcstYear] = reforecastData;
+    }
+  }
+  // console.log('filteredForecastDataObject keys', Object.keys(filteredForecastDataObject)) //not okay here
+  // console.log('filteredForecastDataObject', filteredForecastDataObject) //not okay here
+  // console.log('done with the parsestrindata function')
+  return filteredForecastDataObject
 }
 
 function makeWaterYear(year){

@@ -1,7 +1,8 @@
 import { formatForHighcharts } from "./formatESPData"
-export function makeConfig(data, {propHeight, propWidth}, station,agnosticData, dataType){
+export function makeConfig({propHeight, propWidth}, station,agnosticData, dataType){
   // console.log('data', data)
-  const {categories, series} = data
+  // console.log('agnostic', agnosticData)
+  // const {categories, series} = data
   const height = propHeight ? `${propHeight-20}px` : '200px'
   const width = propWidth - 50
   const rawMedianData = makeMedianData(agnosticData.raw)
@@ -25,12 +26,15 @@ export function makeConfig(data, {propHeight, propWidth}, station,agnosticData, 
   }
   // console.log('input data', inputData)
   const reshapedDataBoth = reshapeDataBoth(inputData)
-  // console.log('reshapedDataBoth', reshapedDataBoth)
+  // console.log('this should have categores', 'reshapedDataBoth', reshapedDataBoth)
   const seriesArray = []
+  let categoriesForChart
   for(const dataType in reshapedDataBoth){
     const currData = reshapedDataBoth[dataType]
+    // console.log('looking for categories here', currData)
     const currSeries = currData.series
     seriesArray.push(...currSeries)
+    categoriesForChart = currData.categories
   }
   // console.log('serieos array', seriesArray)
   // console.log('series', series)
@@ -38,13 +42,13 @@ export function makeConfig(data, {propHeight, propWidth}, station,agnosticData, 
   // console.log('adjMedian', adjMedianData, 'adj raw', rawMedianData, 'reashapedboth', reshapedDataBoth)
   // console.log('itinit config', configInit)
   // const newConfig = Object.assign({}, configInit, data.series, {})
-  const newxaxis = {...configInit.xAxis, categories}
+  // const newxaxis = {...configInit.xAxis, categories}
   const newConfig = 
     {
       ...configInit, 
       chart:{...configInit.chart, width},
       series: seriesArray, 
-      xAxis:{...configInit.xAxis, categories}, 
+      xAxis:{...configInit.xAxis, categoriesForChart}, 
       // chart: {...configInit.chart, height},
       title:{
         ...configInit.title,
@@ -131,7 +135,7 @@ legend: {
 } 
 
 function reshapeData(inputData,dataType){
-  // console.log('type', dataType, 'input data', inputData) 
+  // console.log('im looking for categories here', 'type', dataType, 'input data', inputData) 
   const returnObj = Object.create({})
   const seriesAr = []
   let categoriesAr
@@ -233,7 +237,7 @@ function reshapeDataBoth(inputData={}){
     const currData = inputData[type]
     // console.log('currData', reshapeData(currData, type))
     returnObj[type] = reshapeData(currData, type)
-    reshapeData(currData, type)
+    // reshapeData(currData, type)
 
   }
   return returnObj

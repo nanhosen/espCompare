@@ -4,46 +4,18 @@ import Paper from '@mui/material/Paper';
 import AppContext from '../context/AppContext'
 import Chart from './Chart1';
 import BoxPlotChart from './BoxPlotChart'
-import AllTraceChart from './AllTraceChart';
-// boxplot
-// allTrace
-function returnChartComponent({type, station, parentRefHeight, parentRefWidth, chartSize} = {}){
-  switch(type){
-    case 'column':
-      return <Chart station={station} height={parentRefHeight} width={parentRefWidth} chartSize={chartSize} />
-    case 'allTrace':
-      return <AllTraceChart station={station} height={parentRefHeight} width={parentRefWidth} chartSize={chartSize} />
-    case 'boxplot':
-      return <BoxPlotChart station={station} height={parentRefHeight} width={parentRefWidth} chartSize={chartSize} />    
-    default:
-      return <BoxPlotChart station={station} height={parentRefHeight} width={parentRefWidth} chartSize={chartSize} />    
-    
-  } 
-}
 
-export default function ColumnChartMaker(props){
+export default function SingleStationPage(props){
   const context = useContext(AppContext)
-  const [chartType, setChartType] = useState(context.displayChartType)
   useEffect(()=>{
-    // console.log('chartType', chartType)
-    // console.log(context.stationCardList.length)
-    if(props?.chartType){
-      // console.log('props chart type', props.chartType)
-      if(props.chartType !== chartType){
-        setChartType(props.chartType)
-      }
-    }
-    else{
-      setChartType(context.displayChartType)
-      console.log('no props chart type', props)
-    }
-  },[context.displayChartType, props, chartType])
+    // console.log('context', context)
+  },[context])
   const [stationList, setStationList] = useState()
   useEffect(()=>{
     if(context.stationCardList && context.stationCardList.length > 0 ){
       setStationList(context.stationCardList)
       // console.log('chartData', context.stationCardList, context)
-      // console.log('station card list changed')
+      console.log('station card list changed')
     }
   },[context.stationCardList])
   if(context.dataStatus?.status === 'done'){
@@ -51,7 +23,7 @@ export default function ColumnChartMaker(props){
     if(context.stationCardList &&context.stationCardList.length>0){
       return(
   
-        context.stationCardList.map((currStation,i)=><SingleChart type = {chartType}  key={i} station={currStation} chartSize={context.chartSize}/>)
+        context.stationCardList.map((currStation,i)=><SingleChart type = {context.displayChartType}  key={i} station={currStation} chartSize={context.chartSize}/>)
       )
     }
     else{
@@ -120,7 +92,9 @@ function SingleChart(props){
           height: 500,
         }}
       >{
-        returnChartComponent({type, station, parentRefHeight, parentRefWidth, chartSize: context.chartSize})
+        type === 'column'
+          ? <Chart station={station} height={parentRefHeight} width={parentRefWidth} chartSize={context.chartSize} />
+          : <BoxPlotChart station={station} height={parentRefHeight} width={parentRefWidth} chartSize={context.chartSize} />
       }
         {/* <BoxPlotChart station={station} height={parentRefHeight} width={parentRefWidth} /> */}
         {/* <Chart station={station} height={parentRefHeight} width={parentRefWidth} /> */}
@@ -129,29 +103,6 @@ function SingleChart(props){
   )
 }
 
-
-
-
-// return(
-//   <Grid item xs={chartSize} md={chartSize} lg={chartSize} ref={parentRef}  component="div">
-//     <Paper
-    
-//       sx={{
-//         p: 2,
-//         display: 'flex',
-//         flexDirection: 'column',
-//         height: 500,
-//       }}
-//     >{
-//       type === 'column'
-//         ? <Chart station={station} height={parentRefHeight} width={parentRefWidth} chartSize={context.chartSize} />
-//         : <BoxPlotChart station={station} height={parentRefHeight} width={parentRefWidth} chartSize={context.chartSize} />
-//     }
-//       {/* <BoxPlotChart station={station} height={parentRefHeight} width={parentRefWidth} /> */}
-//       {/* <Chart station={station} height={parentRefHeight} width={parentRefWidth} /> */}
-//     </Paper>
-//   </Grid>
-// )
 // function NumberList(props) {
 //   const numbers = props.numbers;
 //   const listItems = numbers.map((number) =>

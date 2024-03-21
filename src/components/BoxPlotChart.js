@@ -19,13 +19,13 @@ export default function BoxPlotChart(props){
   const [chartConfig, setChartConfig] = useState()
   useEffect(()=>{
     // console.log('chart context', context)
-    if(context && context.boxPlotData){
-      const currConfig = makeConfig(context.boxPlotData[props.station],{ propHeight: props.height, propWidth: props.width}, props.station, context.agnosticStationData[props.station], context.dataType)
+    if(context && context.agnosticStationData){
+      const currConfig = makeConfig({ propHeight: props.height, propWidth: props.width}, props.station, context.agnosticStationData[props.station], context.dataType)
       // console.log('currConfig', currConfig)
       setChartConfig(currConfig)
       // console.log('context', context)
     }
-  },[context.boxPlotData, context.stationCardLists, context.agnosticStationData, context.dataType, props])
+  },[ context.stationCardLists, context.agnosticStationData, context.dataType, props])
   if(chartConfig){
     return(
       <div>

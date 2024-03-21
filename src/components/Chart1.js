@@ -16,12 +16,13 @@ export default function Chart(props){
   const [chartConfig, setChartConfig] = useState()
   useEffect(()=>{
     // console.log('chart context', context)
-    if(context.chartData){
-      const currConfig = makeConfig(context.chartData[props.station], {propHeight:props.height, propWidth:props.width}, props.station, context.agnosticStationData[props.station], context.dataType)
+    if(context.agnosticStationData){
+      const currConfig = makeConfig( {propHeight:props.height, propWidth:props.width}, props.station, context.agnosticStationData[props.station], context.dataType)
+      // const currConfig = makeConfig(context.chartData[props.station], {propHeight:props.height, propWidth:props.width}, props.station, context.agnosticStationData[props.station], context.dataType)
       // console.log('currConfig', currConfig)
       setChartConfig(currConfig)
     }
-  },[context.chartData, props])
+  },[context.agnosticStationData, props, context.dataType])
   if(chartConfig){
     return(
       <div>
